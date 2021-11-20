@@ -88,3 +88,10 @@ impl Modifiers {
         self.intersects(Self::CONTROL_R | Self::ALT_R | Self::SHIFT_R | Self::META_R)
     }
 }
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub struct KeyBinding {
+    pub key: char,
+    pub mods: Modifiers,
+    pub repeat: u8,
+}

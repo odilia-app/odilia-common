@@ -1,4 +1,4 @@
-enum ElementType {
+pub enum ElementType {
   Heading,
   HeadingLevel1,
   HeadingLevel2,
@@ -15,13 +15,13 @@ enum ElementType {
   Tab, // ?? is this what it is when you're looking at tabs in a dialog?
 }
 
-enum ScreenReaderMode {
+pub enum ScreenReaderMode {
   BorwseMode,
   FocusMode,
   ObjectNavigationMode,
 }
 
-enum ScreenReaderEventType {
+pub enum ScreenReaderEventType {
   ChangeMode(ScreenReaderMode),
   Next(ElementType),
   Previous(ElementType),

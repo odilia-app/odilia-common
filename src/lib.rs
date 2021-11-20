@@ -54,35 +54,37 @@ bitflags::bitflags! {
 }
 
 impl Modifiers {
+    // Using `self` instead of `&self` here is fine, `Self` is `Copy`.
+    //
     #[inline]
-    pub fn control(&self) -> bool {
+    pub fn control(self) -> bool {
         self.intersects(Self::CONTROL)
     }
 
     #[inline]
-    pub fn alt(&self) -> bool {
+    pub fn alt(self) -> bool {
         self.intersects(Self::ALT)
     }
 
     #[inline]
-    pub fn shift(&self) -> bool {
+    pub fn shift(self) -> bool {
         self.intersects(Self::SHIFT)
     }
 
     #[inline]
-    pub fn meta(&self) -> bool {
+    pub fn meta(self) -> bool {
         self.intersects(Self::META)
     }
     // Are these two useful? Almost certainly not! Am I going to leave them in? You bet ya!
     // You never know, addon developers are clever!
 
     #[inline]
-    pub fn left(&self) -> bool {
+    pub fn left(self) -> bool {
         self.intersects(Self::CONTROL_L | Self::ALT_L | Self::SHIFT_L | Self::META_L)
     }
 
     #[inline]
-    pub fn right(&self) -> bool {
+    pub fn right(self) -> bool {
         self.intersects(Self::CONTROL_R | Self::ALT_R | Self::SHIFT_R | Self::META_R)
     }
 }

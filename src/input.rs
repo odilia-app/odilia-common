@@ -1,26 +1,21 @@
+use crate::modes::ScreenReaderMode;
+use crate::errors::KeyFromStrError;
 use std::str::FromStr;
-
-#[derive(Debug, Clone, Copy)]
-pub enum FromStrError {
-    EmptyString,
-    NoKey,
-    InvalidKey,
-    InvalidRepeat,
-    InvalidModifier,
-}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct KeyBinding {
     pub key: char,
     pub mods: Modifiers,
     pub repeat: u8,
+    pub mode: ScreenReaderMode,
 }
 
 impl FromStr for KeyBinding {
-    type Err = FromStrError;
+    type Err = KeyFromStrError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        use FromStrError as E;
+        use KeyFromStrError as E;
+        let mode = ScreenReaderMode::CommandMode;
 
         let mut parts = s.split('+').rev();
         let key_and_repeat = parts.next().ok_or(E::EmptyString)?.trim_end();
@@ -66,7 +61,7 @@ impl FromStr for KeyBinding {
             };
         }
 
-        Ok(Self { key, mods, repeat })
+        Ok(Self { key, mods, repeat, mode })
     }
 }
 

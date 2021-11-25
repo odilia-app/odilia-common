@@ -112,7 +112,7 @@ impl FromStr for Key {
             k if k.eq_ignore_ascii_case("Kp9") => Self::Kp9,
             k if k.eq_ignore_ascii_case("KpDelete") => Self::KpDelete,
 
-            _ => return Err(E::InvalidKey),
+            _ => return Err(E::InvalidKey(key.into())),
         })
     }
 }
@@ -138,11 +138,12 @@ impl FromStr for KeyBinding {
 
         let key: Key = subparts.next().ok_or(E::NoKey)?.parse()?;
 
-        let repeat: u8 = subparts
-            .next()
-            .map(|r| r.parse())
-            .unwrap_or(Ok(1))
-            .map_err(|_| E::InvalidRepeat)?;
+        let repeat: u8 = {
+            let repeat_str = subparts.next().unwrap_or("1");
+            repeat_str
+                .parse()
+                .map_err(|_| E::InvalidRepeat(repeat_str.into()))?
+        };
 
         let mut mods = Modifiers::empty();
         for m in parts {
@@ -167,7 +168,7 @@ impl FromStr for KeyBinding {
                 m if m.eq_ignore_ascii_case("RightMeta") => Modifiers::META_R,
                 m if m.eq_ignore_ascii_case("Meta") => Modifiers::META,
 
-                _ => return Err(E::InvalidModifier),
+                _ => return Err(E::InvalidModifier(m.into())),
             };
         }
 

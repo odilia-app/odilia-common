@@ -1,4 +1,4 @@
-use crate::elements::ElementTypes
+use crate::{elements::ElementType, modes::ScreenReaderMode};
 
 pub enum ScreenReaderEventType {
     ChangeMode(ScreenReaderMode),

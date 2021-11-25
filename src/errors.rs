@@ -2,6 +2,7 @@
 pub enum KeyFromStrError {
     EmptyString,
     NoKey,
+    EmptyKey,
     InvalidKey,
     InvalidRepeat,
     InvalidModifier,
@@ -10,5 +11,5 @@ pub enum KeyFromStrError {
 
 #[derive(Debug, Clone, Copy)]
 pub enum ModeFromStrError {
-  ModeNameNotFound,
+    ModeNameNotFound,
 }

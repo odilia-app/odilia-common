@@ -1,10 +1,125 @@
-use crate::modes::ScreenReaderMode;
 use crate::errors::KeyFromStrError;
+use crate::modes::ScreenReaderMode;
 use std::str::FromStr;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum Key {
+    Up,
+    Down,
+    Left,
+    Right,
+    Home,
+    End,
+    PageDown,
+    PageUp,
+    Delete,
+    Escape,
+    F1,
+    F2,
+    F3,
+    F4,
+    F5,
+    F6,
+    F7,
+    F8,
+    F9,
+    F10,
+    F11,
+    F12,
+    Return,
+    Space,
+    Tab,
+    PrintScreen,
+    ScrollLock,
+    Pause,
+    NumLock,
+    KpReturn,
+    KpMinus,
+    KpPlus,
+    KpMultiply,
+    KpDivide,
+    Kp0,
+    Kp1,
+    Kp2,
+    Kp3,
+    Kp4,
+    Kp5,
+    Kp6,
+    Kp7,
+    Kp8,
+    Kp9,
+    KpDelete,
+    Other(char),
+}
+
+impl FromStr for Key {
+    type Err = KeyFromStrError;
+
+    fn from_str(key: &str) -> Result<Self, Self::Err> {
+        use KeyFromStrError as E;
+
+        if key.len() <= 1 {
+            let c = key.chars().next().ok_or(E::EmptyKey)?;
+            if !c.is_control() && !c.is_whitespace() {
+                return Ok(Self::Other(c));
+            }
+        }
+        Ok(match key {
+            // Special cases
+            k if k.eq_ignore_ascii_case("Up") => Self::Up,
+            k if k.eq_ignore_ascii_case("Down") => Self::Down,
+            k if k.eq_ignore_ascii_case("Left") => Self::Left,
+            k if k.eq_ignore_ascii_case("Right") => Self::Right,
+            k if k.eq_ignore_ascii_case("Home") => Self::Home,
+            k if k.eq_ignore_ascii_case("End") => Self::End,
+            k if k.eq_ignore_ascii_case("PageDown") => Self::PageDown,
+            k if k.eq_ignore_ascii_case("PageUp") => Self::PageUp,
+            k if k.eq_ignore_ascii_case("Delete") => Self::Delete,
+            k if k.eq_ignore_ascii_case("Escape") => Self::Escape,
+            k if k.eq_ignore_ascii_case("F1") => Self::F1,
+            k if k.eq_ignore_ascii_case("F2") => Self::F2,
+            k if k.eq_ignore_ascii_case("F3") => Self::F3,
+            k if k.eq_ignore_ascii_case("F4") => Self::F4,
+            k if k.eq_ignore_ascii_case("F5") => Self::F5,
+            k if k.eq_ignore_ascii_case("F6") => Self::F6,
+            k if k.eq_ignore_ascii_case("F7") => Self::F7,
+            k if k.eq_ignore_ascii_case("F8") => Self::F8,
+            k if k.eq_ignore_ascii_case("F9") => Self::F9,
+            k if k.eq_ignore_ascii_case("F10") => Self::F10,
+            k if k.eq_ignore_ascii_case("F11") => Self::F11,
+            k if k.eq_ignore_ascii_case("F12") => Self::F12,
+            k if k.eq_ignore_ascii_case("Return") => Self::Return,
+            k if k.eq_ignore_ascii_case("Space") => Self::Space,
+            k if k.eq_ignore_ascii_case("Tab") => Self::Tab,
+            k if k.eq_ignore_ascii_case("PrintScreen") => Self::PrintScreen,
+            k if k.eq_ignore_ascii_case("ScrollLock") => Self::ScrollLock,
+            k if k.eq_ignore_ascii_case("Pause") => Self::Pause,
+            k if k.eq_ignore_ascii_case("NumLock") => Self::NumLock,
+            k if k.eq_ignore_ascii_case("KpReturn") => Self::KpReturn,
+            k if k.eq_ignore_ascii_case("KpMinus") => Self::KpMinus,
+            k if k.eq_ignore_ascii_case("KpPlus") => Self::KpPlus,
+            k if k.eq_ignore_ascii_case("KpMultiply") => Self::KpMultiply,
+            k if k.eq_ignore_ascii_case("KpDivide") => Self::KpDivide,
+            k if k.eq_ignore_ascii_case("Kp0") => Self::Kp0,
+            k if k.eq_ignore_ascii_case("Kp1") => Self::Kp1,
+            k if k.eq_ignore_ascii_case("Kp2") => Self::Kp2,
+            k if k.eq_ignore_ascii_case("Kp3") => Self::Kp3,
+            k if k.eq_ignore_ascii_case("Kp4") => Self::Kp4,
+            k if k.eq_ignore_ascii_case("Kp5") => Self::Kp5,
+            k if k.eq_ignore_ascii_case("Kp6") => Self::Kp6,
+            k if k.eq_ignore_ascii_case("Kp7") => Self::Kp7,
+            k if k.eq_ignore_ascii_case("Kp8") => Self::Kp8,
+            k if k.eq_ignore_ascii_case("Kp9") => Self::Kp9,
+            k if k.eq_ignore_ascii_case("KpDelete") => Self::KpDelete,
+
+            _ => return Err(E::InvalidKey),
+        })
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct KeyBinding {
-    pub key: char,
+    pub key: Key,
     pub mods: Modifiers,
     pub repeat: u8,
     pub mode: ScreenReaderMode,
@@ -17,16 +132,11 @@ impl FromStr for KeyBinding {
         use KeyFromStrError as E;
         let mode = ScreenReaderMode::CommandMode;
 
-        let mut parts = s.split('+').rev();
-        let key_and_repeat = parts.next().ok_or(E::EmptyString)?.trim_end();
+        let mut parts = s.rsplit('+').map(str::trim);
+        let key_and_repeat = parts.next().ok_or(E::EmptyString)?;
         let mut subparts = key_and_repeat.split(':');
 
-        let key = subparts.next().ok_or(E::NoKey)?;
-        let mut chars = key.chars();
-        let key = chars.next().ok_or(E::NoKey)?;
-        if chars.next().is_some() {
-            return Err(E::InvalidKey);
-        }
+        let key: Key = subparts.next().ok_or(E::NoKey)?.parse()?;
 
         let repeat: u8 = subparts
             .next()
@@ -61,7 +171,12 @@ impl FromStr for KeyBinding {
             };
         }
 
-        Ok(Self { key, mods, repeat, mode })
+        Ok(Self {
+            key,
+            mods,
+            repeat,
+            mode,
+        })
     }
 }
 
@@ -135,21 +250,26 @@ mod test {
     fn parse_key_binding() {
         // simple
         let kb: KeyBinding = "Odilia+h".parse().unwrap();
-        assert_eq!(kb.key, 'h');
+        assert_eq!(kb.key, Key::Other('h'));
+        assert_eq!(kb.mods, Modifiers::ODILIA);
+        assert_eq!(kb.repeat, 1);
+        // With whitespace
+        let kb: KeyBinding = "Odilia + h".parse().unwrap();
+        assert_eq!(kb.key, Key::Other('h'));
         assert_eq!(kb.mods, Modifiers::ODILIA);
         assert_eq!(kb.repeat, 1);
         // Complex
-        let kb: KeyBinding = "Control+Shift+Alt+Meta+Applications+Odilia+s:3"
+        let kb: KeyBinding = "Control+Shift+Alt+Meta+Applications+Odilia+Return:3"
             .parse()
             .unwrap();
-        assert_eq!(kb.key, 's');
+        assert_eq!(kb.key, Key::Return);
         assert_eq!(kb.mods, Modifiers::all());
         assert_eq!(kb.repeat, 3);
         // Left only
         let kb: KeyBinding = "LeftControl+LeftShift+LeftAlt+LeftMeta+.:2"
             .parse()
             .unwrap();
-        assert_eq!(kb.key, '.');
+        assert_eq!(kb.key, Key::Other('.'));
         assert_eq!(
             kb.mods,
             Modifiers::CONTROL_L | Modifiers::ALT_L | Modifiers::SHIFT_L | Modifiers::META_L
@@ -158,7 +278,7 @@ mod test {
         let kb: KeyBinding = "RightControl+RightShift+RightAlt+RightMeta+.:2"
             .parse()
             .unwrap();
-        assert_eq!(kb.key, '.');
+        assert_eq!(kb.key, Key::Other('.'));
         assert_eq!(
             kb.mods,
             Modifiers::CONTROL_R | Modifiers::ALT_R | Modifiers::SHIFT_R | Modifiers::META_R

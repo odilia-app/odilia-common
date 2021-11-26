@@ -117,20 +117,42 @@ impl FromStr for Key {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct KeyBinding {
     pub key: Key,
     pub mods: Modifiers,
     pub repeat: u8,
-    pub mode: ScreenReaderMode,
+    /* if none, match all modes */
+    pub mode: Option<ScreenReaderMode>,
+}
+
+
+/* get mode and return it with a stripped version of the string */
+fn get_mode_strip(s: &str) -> (Option<ScreenReaderMode>, String) {
+  let new_str: String;
+  let mode_index = s.find("|");
+  let mode: Option<ScreenReaderMode> = match mode_index {
+    Some(mode_index) => {
+      new_str = s.get(mode_index+1..).unwrap().to_string(); // pretty sure is safe
+      Some(ScreenReaderMode {
+        name: s.get(..mode_index).unwrap().to_string() // mostly safe I think?
+      })
+    },
+    _ => {
+      new_str = s.to_string().clone();
+      None
+    },
+  };
+
+  (mode, new_str)
 }
 
 impl FromStr for KeyBinding {
     type Err = KeyFromStrError;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s1: &str) -> Result<Self, Self::Err> {
         use KeyFromStrError as E;
-        let mode = ScreenReaderMode::CommandMode;
+        let (mode, s) = get_mode_strip(s1);
 
         let mut parts = s.rsplit('+').map(str::trim);
         let key_and_repeat = parts.next().ok_or(E::EmptyString)?;
@@ -251,6 +273,7 @@ mod test {
     fn parse_key_binding() {
         // simple
         let kb: KeyBinding = "Odilia+h".parse().unwrap();
+        println!("{:?}", kb);
         assert_eq!(kb.key, Key::Other('h'));
         assert_eq!(kb.mods, Modifiers::ODILIA);
         assert_eq!(kb.repeat, 1);

@@ -51,6 +51,7 @@ pub enum Key {
     Kp9,
     KpDelete,
     Function,
+    Insert,
     Other(char),
 }
 

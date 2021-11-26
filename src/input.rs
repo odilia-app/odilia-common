@@ -12,6 +12,7 @@ pub enum Key {
     End,
     PageDown,
     PageUp,
+    Backspace,
     Delete,
     Escape,
     F1,
@@ -49,6 +50,7 @@ pub enum Key {
     Kp8,
     Kp9,
     KpDelete,
+    Function,
     Other(char),
 }
 
@@ -124,6 +126,8 @@ pub struct KeyBinding {
     pub repeat: u8,
     /* if none, match all modes */
     pub mode: Option<ScreenReaderMode>,
+    /* whether or not to consume the event, or let it pass through */
+    pub consume: bool,
 }
 
 
@@ -146,13 +150,31 @@ fn get_mode_strip(s: &str) -> (Option<ScreenReaderMode>, String) {
 
   (mode, new_str)
 }
+fn get_consume_strip(s: &str) -> (bool, String) {
+  let new_str: String;
+  let consume_index = s.find("|");
+  let consume: bool = match consume_index {
+    Some(consume_index) => {
+      new_str = s.get(consume_index+1..).unwrap().to_string(); // pretty sure is safe
+      let b_str = s.get(..consume_index).unwrap().to_string(); // mostly safe I think?
+      b_str == "C" 
+    },
+    _ => {
+      new_str = s.to_string().clone();
+      false
+    },
+  };
+
+  (consume, new_str)
+}
 
 impl FromStr for KeyBinding {
     type Err = KeyFromStrError;
 
     fn from_str(s1: &str) -> Result<Self, Self::Err> {
         use KeyFromStrError as E;
-        let (mode, s) = get_mode_strip(s1);
+        let (mode, s2) = get_mode_strip(s1);
+        let (consume, s) = get_consume_strip(&s2);
 
         let mut parts = s.rsplit('+').map(str::trim);
         let key_and_repeat = parts.next().ok_or(E::EmptyString)?;
@@ -199,6 +221,7 @@ impl FromStr for KeyBinding {
             mods,
             repeat,
             mode,
+            consume,
         })
     }
 }

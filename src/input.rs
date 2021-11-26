@@ -230,6 +230,8 @@ impl FromStr for KeyBinding {
 bitflags::bitflags! {
     #[derive(Default)]
     pub struct Modifiers: u16 {
+        const NONE = 0;
+
         /// Usually capslock, insert, or kp-insert
         const ODILIA = 1 << 0;
 

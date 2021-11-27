@@ -120,17 +120,17 @@ impl FromStr for Key {
     }
 }
 
-/* Notice it has almost the same fields as KeyBinding, should probably use it in KeyBinding eventually. */
+/* Notice it has almost the same fields as KeyBinding. */
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct KeyEvent {
-    pub key: Key,
+    pub key: Option<Key>,
     pub mods: Modifiers,
-    pub repeats: u8,
+    pub repeat: u8,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct KeyBinding {
-    pub key: Key,
+    pub key: Option<Key>,
     pub mods: Modifiers,
     pub repeat: u8,
     /* if none, match all modes */
@@ -225,7 +225,7 @@ impl FromStr for KeyBinding {
         }
 
         Ok(Self {
-            key,
+            key: Some(key),
             mods,
             repeat,
             mode,

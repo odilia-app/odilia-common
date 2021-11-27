@@ -4,9 +4,9 @@ pub struct ScreenReaderMode {
 }
 
 impl ScreenReaderMode {
-  pub fn new(name: String) -> Self {
+  pub fn new(name: &str) -> Self {
     ScreenReaderMode {
-      name
+      name: name.to_string()
     }
   }
 }

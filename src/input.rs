@@ -120,6 +120,14 @@ impl FromStr for Key {
     }
 }
 
+/* Notice it has almost the same fields as KeyBinding, should probably use it in KeyBinding eventually. */
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub struct KeyEvent {
+    pub key: Key,
+    pub mods: Modifiers,
+    pub repeats: u8,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct KeyBinding {
     pub key: Key,
@@ -130,7 +138,6 @@ pub struct KeyBinding {
     /* whether or not to consume the event, or let it pass through */
     pub consume: bool,
 }
-
 
 /* get mode and return it with a stripped version of the string */
 fn get_mode_strip(s: &str) -> (Option<ScreenReaderMode>, String) {

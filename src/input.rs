@@ -174,8 +174,8 @@ impl FromStr for KeyBinding {
 
     fn from_str(s1: &str) -> Result<Self, Self::Err> {
         use KeyFromStrError as E;
-        let (mode, s2) = get_mode_strip(s1);
-        let (consume, s) = get_consume_strip(&s2);
+        let (consume, s2) = get_consume_strip(&s1);
+        let (mode, s) = get_mode_strip(&s2);
 
         let mut parts = s.rsplit('+').map(str::trim);
         let key_and_repeat = parts.next().ok_or(E::EmptyString)?;
@@ -334,5 +334,10 @@ mod test {
             Modifiers::CONTROL_R | Modifiers::ALT_R | Modifiers::SHIFT_R | Modifiers::META_R
         );
         assert_eq!(kb.repeat, 2);
+        // test consume
+        let kb: KeyBinding = "C|Odilia+h"
+            .parse()
+            .unwrap();
+        assert_eq!(kb.consume, true);
     }
 }

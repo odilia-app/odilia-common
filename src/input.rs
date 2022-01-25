@@ -120,17 +120,26 @@ impl FromStr for Key {
     }
 }
 
+/* Notice it has almost the same fields as KeyBinding. */
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub struct KeyEvent {
+    pub key: Option<Key>,
+    pub mods: Modifiers,
+    pub repeat: u8,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct KeyBinding {
-    pub key: Key,
+    pub key: Option<Key>,
     pub mods: Modifiers,
     pub repeat: u8,
     /* if none, match all modes */
     pub mode: Option<ScreenReaderMode>,
     /* whether or not to consume the event, or let it pass through */
     pub consume: bool,
+    /* whether to notify the SR that the key has been pressed; currently at least one function in -prototype/main.rs will ALWAYS see every key, but this could change. */
+    pub notify: bool,
 }
-
 
 /* get mode and return it with a stripped version of the string */
 fn get_mode_strip(s: &str) -> (Option<ScreenReaderMode>, String) {
@@ -174,8 +183,8 @@ impl FromStr for KeyBinding {
 
     fn from_str(s1: &str) -> Result<Self, Self::Err> {
         use KeyFromStrError as E;
-        let (mode, s2) = get_mode_strip(s1);
-        let (consume, s) = get_consume_strip(&s2);
+        let (consume, s2) = get_consume_strip(&s1);
+        let (mode, s) = get_mode_strip(&s2);
 
         let mut parts = s.rsplit('+').map(str::trim);
         let key_and_repeat = parts.next().ok_or(E::EmptyString)?;
@@ -218,11 +227,12 @@ impl FromStr for KeyBinding {
         }
 
         Ok(Self {
-            key,
+            key: Some(key),
             mods,
             repeat,
             mode,
             consume,
+            notify: true,
         })
     }
 }
@@ -300,26 +310,26 @@ mod test {
         // simple
         let kb: KeyBinding = "Odilia+h".parse().unwrap();
         println!("{:?}", kb);
-        assert_eq!(kb.key, Key::Other('h'));
+        assert_eq!(kb.key, Some(Key::Other('h')));
         assert_eq!(kb.mods, Modifiers::ODILIA);
         assert_eq!(kb.repeat, 1);
         // With whitespace
         let kb: KeyBinding = "Odilia + h".parse().unwrap();
-        assert_eq!(kb.key, Key::Other('h'));
+        assert_eq!(kb.key, Some(Key::Other('h')));
         assert_eq!(kb.mods, Modifiers::ODILIA);
         assert_eq!(kb.repeat, 1);
         // Complex
         let kb: KeyBinding = "Control+Shift+Alt+Meta+Applications+Odilia+Return:3"
             .parse()
             .unwrap();
-        assert_eq!(kb.key, Key::Return);
+        assert_eq!(kb.key, Some(Key::Return));
         assert_eq!(kb.mods, Modifiers::all());
         assert_eq!(kb.repeat, 3);
         // Left only
         let kb: KeyBinding = "LeftControl+LeftShift+LeftAlt+LeftMeta+.:2"
             .parse()
             .unwrap();
-        assert_eq!(kb.key, Key::Other('.'));
+        assert_eq!(kb.key, Some(Key::Other('.')));
         assert_eq!(
             kb.mods,
             Modifiers::CONTROL_L | Modifiers::ALT_L | Modifiers::SHIFT_L | Modifiers::META_L
@@ -328,11 +338,18 @@ mod test {
         let kb: KeyBinding = "RightControl+RightShift+RightAlt+RightMeta+.:2"
             .parse()
             .unwrap();
-        assert_eq!(kb.key, Key::Other('.'));
+        assert_eq!(kb.key, Some(Key::Other('.')));
         assert_eq!(
             kb.mods,
             Modifiers::CONTROL_R | Modifiers::ALT_R | Modifiers::SHIFT_R | Modifiers::META_R
         );
         assert_eq!(kb.repeat, 2);
+        assert_eq!(kb.consume, false);
+        // test consume
+        let kb: KeyBinding = "C|Odilia+h"
+            .parse()
+            .unwrap();
+        assert_eq!(kb.consume, true);
+        assert_eq!(kb.notify, true);
     }
 }
